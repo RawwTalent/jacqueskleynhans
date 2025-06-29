@@ -1,0 +1,1238 @@
+<!-- CHANGE-LOG: wrapped long lines, applied 2-space indent -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unisolv 2.0 Operator Training | Enterprise Edition</title>
+    <link rel="stylesheet" href="https://cdn.tailwindcss.com" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.4/dist/purify.min.js"></script>
+    <style>
+      :root {
+        --theme-accent: #3490ff;
+        --theme-accent-hover: #1e70e5;
+        --theme-info: #3b82f6;
+        --theme-success: #10b981;
+        --theme-warning: #f59e0b;
+        --theme-error: #ef4444;
+        --theme-border-radius: 0.5rem;
+
+        /* Light theme */
+        --bg-primary-light: #f9fafb;
+        --bg-secondary-light: #ffffff;
+        --text-primary-light: #1f2937;
+        --text-secondary-light: #4b5563;
+        --border-light: #e5e7eb;
+        --card-light: #ffffff;
+
+        /* Dark theme */
+        --bg-primary-dark: #000000;
+        --bg-secondary-dark: #1a1a1a;
+        --text-primary-dark: #f1f5f9;
+        --text-secondary-dark: #94a3b8;
+        --border-dark: #334155;
+        --card-dark: #1e293b;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        transition:
+          background-color 0.3s,
+          color 0.3s;
+        overflow: hidden;
+      }
+
+      :root {
+        --bg-primary: var(--bg-primary-light);
+        --bg-secondary: var(--bg-secondary-light);
+        --text-primary: var(--text-primary-light);
+        --text-secondary: var(--text-secondary-light);
+        --border-color: var(--border-light);
+        --card-bg: var(--card-light);
+      }
+
+      html.dark {
+        --bg-primary: var(--bg-primary-dark);
+        --bg-secondary: var(--bg-secondary-dark);
+        --text-primary: var(--text-primary-dark);
+        --text-secondary: var(--text-secondary-dark);
+        --border-color: var(--border-dark);
+        --card-bg: var(--card-dark);
+      }
+
+      /* Layout */
+      #app-container {
+        display: grid;
+        height: 100vh;
+        grid-template-columns: 64px minmax(250px, 0.3fr) 1fr minmax(250px, 0.3fr);
+        transition: grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      #app-container.training-active {
+        grid-template-columns: 64px minmax(250px, 0.3fr) 1fr minmax(250px, 0.3fr);
+      }
+      #app-container.zen-mode-active {
+        grid-template-columns: 64px 0fr 1fr 0fr;
+      }
+
+      /* Global navigation */
+      #global-nav {
+        background-color: var(--bg-primary-dark);
+        z-index: 50;
+        border-right: 1px solid var(--border-dark);
+      }
+      .global-nav-link {
+        color: #94a3b8;
+        transition: all 0.2s;
+        position: relative;
+      }
+      .global-nav-link:hover,
+      .global-nav-link.active {
+        color: white;
+        background-color: #334155;
+      }
+      .global-nav-link.active::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 60%;
+        width: 3px;
+        background-color: var(--theme-accent);
+        border-radius: 0 4px 4px 0;
+      }
+
+      /* Sidebar */
+      #context-bar {
+        background-color: var(--bg-secondary);
+        border-right: 1px solid var(--border-color);
+        transition: all 0.4s;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .sidebar-link {
+        border-left: 4px solid transparent;
+        color: var(--text-secondary);
+        transition: all 0.2s;
+        padding: 0.75rem 1.25rem;
+        display: flex;
+        align-items: center;
+        position: relative;
+      }
+      .sidebar-link:hover {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+      }
+      .sidebar-link.active {
+        background-color: rgba(52, 144, 255, 0.1);
+        color: var(--theme-accent);
+        border-left-color: var(--theme-accent);
+        font-weight: 700;
+      }
+      .sidebar-link.disabled {
+        color: var(--text-secondary);
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+      .sidebar-link .progress-indicator {
+        position: absolute;
+        right: 1rem;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .sidebar-link.completed .progress-indicator {
+        color: var(--theme-success);
+      }
+      .sidebar-link.current .progress-indicator {
+        background-color: var(--theme-accent);
+        color: white;
+        border-radius: 50%;
+        font-size: 0.75rem;
+        font-weight: bold;
+      }
+      .sidebar-submenu {
+        padding-left: 1.5rem;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+      .sidebar-submenu.expanded {
+        max-height: 1000px;
+      }
+      .part-header {
+        padding: 0.75rem 1.25rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--bg-primary);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .part-locked {
+        color: var(--theme-error);
+        font-size: 0.7rem;
+      }
+
+      /* Content */
+      .content-section {
+        padding: 2rem;
+        background-color: var(--bg-secondary);
+        border-radius: var(--theme-border-radius);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+        color: var(--text-primary);
+      }
+      .content-section h2 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        border-bottom: 2px solid var(--theme-accent);
+        padding-bottom: 0.75rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--text-primary);
+      }
+      .content-section h3 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+        padding-top: 0.5rem;
+      }
+      .content-section h4 {
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+        color: var(--theme-accent);
+        margin-top: 1.8rem;
+        margin-bottom: 0.8rem;
+      }
+      .content-section p,
+      .content-section ul,
+      .content-section ol {
+        font-size: 1rem;
+        line-height: 1.8;
+        margin-bottom: 1.25rem;
+        color: var(--text-secondary);
+      }
+      .content-section strong {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+      .content-section code {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        border-radius: 4px;
+        padding: 0.2rem 0.4rem;
+        font-weight: 500;
+        border: 1px solid var(--border-color);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 0.9em;
+      }
+      .content-section pre {
+        background-color: var(--bg-primary);
+        border-radius: var(--theme-border-radius);
+        padding: 1rem;
+        overflow-x: auto;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border-color);
+      }
+      .content-section pre code {
+        background: none;
+        border: none;
+        padding: 0;
+      }
+
+      .callout {
+        background-color: rgba(59, 130, 246, 0.1);
+        border-left: 4px solid var(--theme-info);
+        padding: 1rem;
+        border-radius: 0 var(--theme-border-radius) var(--theme-border-radius) 0;
+        margin: 1.5rem 0;
+        display: flex;
+        gap: 0.75rem;
+      }
+      .callout i {
+        color: var(--theme-info);
+        font-size: 1.25rem;
+        min-width: 24px;
+      }
+      .callout.warning {
+        background-color: rgba(245, 158, 11, 0.1);
+        border-left-color: var(--theme-warning);
+      }
+      .callout.warning i {
+        color: var(--theme-warning);
+      }
+      .callout.error {
+        background-color: rgba(239, 68, 68, 0.1);
+        border-left-color: var(--theme-error);
+      }
+      .callout.error i {
+        color: var(--theme-error);
+      }
+      .callout.success {
+        background-color: rgba(16, 185, 129, 0.1);
+        border-left-color: var(--theme-success);
+      }
+      .callout.success i {
+        color: var(--theme-success);
+      }
+
+      /* Buttons */
+      .btn {
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: var(--theme-border-radius);
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+      .btn-primary {
+        background-color: var(--theme-accent);
+        color: white;
+        box-shadow: 0 4px 6px rgba(52, 144, 255, 0.2);
+      }
+      .btn-primary:hover {
+        background-color: var(--theme-accent-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(52, 144, 255, 0.25);
+      }
+      .btn-secondary {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+      }
+      .btn-secondary:hover {
+        background-color: var(--bg-secondary);
+        border-color: var(--theme-accent);
+      }
+
+      /* Quiz */
+      .quiz-container {
+        background-color: var(--card-bg);
+        border-radius: var(--theme-border-radius);
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        margin: 2rem 0;
+        border: 1px solid var(--border-color);
+      }
+      .question-box {
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--theme-border-radius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .question-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.25rem;
+      }
+      .question-text {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        flex: 1;
+      }
+      .question-number {
+        background-color: var(--theme-accent);
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin-right: 1rem;
+        flex-shrink: 0;
+      }
+      .option-item {
+        margin-bottom: 0.75rem;
+      }
+      .option-item label {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--theme-border-radius);
+        cursor: pointer;
+        transition: all 0.2s;
+        background-color: var(--bg-secondary);
+      }
+      .option-item input:checked + label {
+        background-color: rgba(52, 144, 255, 0.1);
+        border-color: var(--theme-accent);
+      }
+      .option-item input:checked + label::before {
+        content: "\f00c";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        color: var(--theme-accent);
+        margin-right: 0.75rem;
+      }
+      .confidence-selector {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
+      .confidence-btn {
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .confidence-btn.selected {
+        background-color: rgba(52, 144, 255, 0.1);
+        border-color: var(--theme-accent);
+        color: var(--theme-accent);
+      }
+      .quiz-controls {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1.5rem;
+      }
+      .quiz-results {
+        text-align: center;
+        padding: 2rem;
+      }
+      .quiz-result-card {
+        padding: 2rem;
+        border-radius: var(--theme-border-radius);
+        margin: 1rem auto;
+        max-width: 500px;
+      }
+      .quiz-result-card.pass {
+        background-color: rgba(16, 185, 129, 0.1);
+        border: 1px solid var(--theme-success);
+      }
+      .quiz-result-card.fail {
+        background-color: rgba(239, 68, 68, 0.1);
+        border: 1px solid var(--theme-error);
+      }
+      .skill-confirmation {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background-color: rgba(16, 185, 129, 0.1);
+        padding: 0.75rem 1rem;
+        border-radius: var(--theme-border-radius);
+        margin: 1rem 0;
+        border-left: 3px solid var(--theme-success);
+      }
+
+      /* Modal */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+      }
+      .modal-overlay.visible {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .modal-content {
+        background-color: var(--bg-secondary);
+        border-radius: var(--theme-border-radius);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        width: 90%;
+        max-width: 800px;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(20px);
+        transition: transform 0.3s;
+      }
+      .modal-overlay.visible .modal-content {
+        transform: translateY(0);
+      }
+      .modal-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .modal-title {
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: var(--text-primary);
+      }
+      .modal-close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s;
+      }
+      .modal-close-btn:hover {
+        background-color: var(--bg-primary);
+        color: var(--theme-error);
+      }
+      .modal-body {
+        padding: 1.5rem;
+        overflow-y: auto;
+        flex: 1;
+      }
+      .modal-body h3 {
+        font-size: 1.2rem;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+      }
+      .modal-body p {
+        margin-bottom: 1rem;
+        line-height: 1.7;
+        color: var(--text-secondary);
+      }
+      .modal-body ul {
+        list-style-type: disc;
+        padding-left: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .modal-body li {
+        margin-bottom: 0.5rem;
+        color: var(--text-secondary);
+      }
+      .loader {
+        border: 3px solid var(--bg-primary);
+        border-top: 3px solid var(--theme-accent);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 2rem auto;
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .chart-container {
+        background: var(--card-bg);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border-radius: var(--theme-border-radius);
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+      }
+      .chart-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+      }
+
+      .heatmap-container {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .heatmap-row {
+        display: flex;
+        gap: 4px;
+      }
+      .heatmap-cell {
+        width: 14px;
+        height: 14px;
+        border-radius: 2px;
+        background-color: var(--bg-primary);
+      }
+      .heatmap-cell.low {
+        background-color: #ebedf0;
+      }
+      .heatmap-cell.medium {
+        background-color: #9be9a8;
+      }
+      .heatmap-cell.high {
+        background-color: #40c463;
+      }
+      .heatmap-cell.very-high {
+        background-color: #30a14e;
+      }
+      .heatmap-cell.extreme {
+        background-color: #216e39;
+      }
+      html.dark .heatmap-cell.low {
+        background-color: #2d3748;
+      }
+      html.dark .heatmap-cell.medium {
+        background-color: #2d6a4f;
+      }
+      html.dark .heatmap-cell.high {
+        background-color: #1b4332;
+      }
+      html.dark .heatmap-cell.very-high {
+        background-color: #0d2818;
+      }
+      html.dark .heatmap-cell.extreme {
+        background-color: #081c15;
+      }
+
+      button:focus,
+      a:focus,
+      input:focus {
+        outline: 2px solid var(--theme-accent);
+        outline-offset: 2px;
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--theme-accent);
+      }
+
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(52, 144, 255, 0.4);
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(52, 144, 255, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(52, 144, 255, 0);
+        }
+      }
+      .pulse-animation {
+        animation: pulse 1.5s ease-in-out;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app-container">
+      <nav id="global-nav" role="navigation" aria-label="Primary" class="flex flex-col items-center p-2 space-y-4">
+        <a href="#" class="global-nav-link p-3 rounded-lg" title="Dashboard" aria-label="Dashboard" id="dashboard-link">
+          <i class="fas fa-chart-line"></i>
+        </a>
+        <a href="#" class="global-nav-link active p-3 rounded-lg" title="My Learning" aria-label="My Learning">
+          <i class="fas fa-book-open"></i>
+        </a>
+        <a href="#" class="global-nav-link p-3 rounded-lg" title="Analytics" aria-label="Analytics" id="analytics-link">
+          <i class="fas fa-chart-pie"></i>
+        </a>
+        <div class="flex-grow"></div>
+        <button
+          id="theme-switcher"
+          class="global-nav-link p-3 rounded-lg"
+          title="Toggle Theme"
+          aria-label="Toggle 
+Theme"
+        >
+          <i class="fas fa-moon"></i>
+        </button>
+        <a href="#" class="global-nav-link p-3 rounded-lg" title="Help" aria-label="Help" id="help-link">
+          <i class="fas fa-question-circle"></i>
+        </a>
+      </nav>
+      <aside id="context-bar" role="navigation" aria-label="Course Sections" class="flex flex-col"></aside>
+      <main class="overflow-y-auto" id="mainContent" role="main">
+        <div
+          id="cover-page"
+          class="absolute inset-0 flex flex-col items-center justify-center p-8 z-20"
+          style="background-color: var(--bg-secondary)"
+        >
+          <div class="text-center w-full max-w-4xl">
+            <div class="logo-container mb-12">
+              <div class="text-6xl font-bold text-[var(--theme-accent)]">U</div>
+              <div class="text-3xl font-bold text-gray-800 dark:text-gray-200">
+                UNISOLV
+                <span class="text-[var(--theme-accent)]">2.0</span>
+              </div>
+            </div>
+            <h1
+              class="text-5xl md:text-6xl font-extrabold tracking-tight leading-tight"
+              style="color: var(--text-primary)"
+            >
+              Claims Settlement
+            </h1>
+            <h2
+              class="mt-4 text-sm md:text-base font-medium tracking-widest uppercase"
+              style="color: var(--text-secondary)"
+            >
+              Operator Certification Program
+            </h2>
+            <div class="mt-20">
+              <button id="begin-training-btn" class="btn btn-primary">
+                <i class="fas fa-play mr-2"></i>
+                BEGIN TRAINING
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="content-wrapper" class="opacity-0 transition-opacity duration-500">
+          <div class="max-w-5xl mx-auto py-8 px-4">
+            <div id="dynamicContentArea" class="min-h-full"></div>
+          </div>
+        </div>
+      </main>
+      <aside
+        id="action-sidebar"
+        role="complementary"
+        class="flex flex-col p-4"
+        style="background-color: var(--bg-secondary); border-left: 1px solid var(--border-color)"
+      >
+        <div class="p-4 border-b" style="border-color: var(--border-color)">
+          <h3 class="font-bold text-lg mb-2">Team Progress</h3>
+          <div class="progress-bar bg-gray-200 rounded-full h-2 mb-2">
+            <div class="bg-green-500 rounded-full h-2" style="width: 65%"></div>
+          </div>
+          <p class="text-sm" style="color: var(--text-secondary)">12/20 operators certified</p>
+        </div>
+        <div class="p-4">
+          <h3 class="font-bold text-lg mb-2">Quick Actions</h3>
+          <button class="btn btn-secondary w-full mb-3">
+            <i class="fas fa-file-export mr-2"></i>
+            Generate Report
+          </button>
+          <button class="btn btn-secondary w-full">
+            <i class="fas fa-envelope mr-2"></i>
+            Send Reminder
+          </button>
+        </div>
+      </aside>
+    </div>
+    <div id="geminiModal" class="modal-overlay" role="dialog" aria-modal="true"></div>
+    <div id="sectionTemplates" style="display: none">
+      <template id="content-workflows">
+        <div class="content-section">
+          <h2>System Workflows</h2>
+          <p>Before using this application, understand the high-level data flow and system interactions.</p>
+          <div class="callout info">
+            <i class="fas fa-info-circle"></i>
+            <div>
+              <strong>Key Concept:</strong>
+              Unisolv 2.0 integrates with multiple external systems to provide a comprehensive claims settlement
+              solution.
+            </div>
+          </div>
+          <h3 id="workflows_anchor">Context Diagram</h3>
+          <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg shadow-inner overflow-x-auto">
+            <pre class="mermaid">
+        graph TD
+          subgraph External Systems
+            debtors_creditors("Debtors & Creditors")
+            data_bureau("Data Bureau")
+            core_claim_engine("Core Claim Engine")
+            bi_solutions("BI Solutions")
+            tenant_db("Tenant DB")
+          end
+          subgraph Unisolv 2.0
+            claim_settlement("Claim Settlement")
+            era_listener("ERA File Listener")
+          end
+          operator([Operator])
+          operator -- Uses --> claim_settlement
+          era_listener -- Forwards ERA Files --> claim_settlement
+          claim_settlement -- Submits Processed Data --> bi_solutions
+          claim_settlement -- Updates/Creates Accounts --> debtors_creditors
+          claim_settlement -- Gets Connection Strings --> data_bureau
+          claim_settlement -- Gets Patient Profiles --> tenant_db
+          claim_settlement -- Syncs Claim Data --> core_claim_engine
+      </pre
+            >
+          </div>
+          <h3>Key System Interactions</h3>
+          <ul>
+            <li>
+              <strong>Debtors & Creditors:</strong>
+              Updates and creates financial accounts
+            </li>
+            <li>
+              <strong>Data Bureau:</strong>
+              Provides connection strings
+            </li>
+            <li>
+              <strong>Core Claim Engine:</strong>
+              Synchronizes claim data
+            </li>
+            <li>
+              <strong>BI Solutions:</strong>
+              Receives processed data
+            </li>
+            <li>
+              <strong>Tenant DB:</strong>
+              Supplies patient profiles
+            </li>
+          </ul>
+        </div>
+      </template>
+      <template id="content-logging_in">
+        <div class="content-section">
+          <h2>1.1 Logging In</h2>
+          <p>
+            To begin any claim settlement task, you must first access the correct application within the Healthcare
+            System.
+          </p>
+          <ol>
+            <li>
+              <strong>Log in</strong>
+              to the New Modernised Healthcare System using your credentials.
+            </li>
+            <li>Locate the main navigation menu on the left.</li>
+            <li>
+              Click
+              <code>Claim Settlement</code>
+              .
+            </li>
+          </ol>
+        </div>
+      </template>
+      <template id="content-dashboard">
+        <div class="content-section">
+          <h2>1.2 Dashboard</h2>
+          <p>The Claim Settlement Home Screen provides a real-time overview of key financial metrics.</p>
+          <h4>Key Tiles</h4>
+          <ul>
+            <li><strong>Value of Claimed Scripts</strong></li>
+            <li><strong>Unprocessed ERA Files</strong></li>
+            <li><strong>Unallocated Bank Deposits</strong></li>
+            <li><strong>Incomplete Allocation Documents</strong></li>
+            <li><strong>Completed RAs</strong></li>
+          </ul>
+        </div>
+      </template>
+      <template id="content-bank_statements_parent">
+        <div class="content-section">
+          <h2>1.3 Managing Bank Statements</h2>
+          <p>The Bank Statement Register allows for the reconciliation of payments received.</p>
+          <h3 id="bank_statements_overview_anchor">1.3.1 Bank Statement Register Overview</h3>
+          <p>
+            <strong>Access:</strong>
+            Navigate to
+            <code>Bank Statement Register</code>
+            .
+          </p>
+          <h3 id="bank_statements_excel_anchor">1.3.2 Bank Statement Excel Operations</h3>
+          <p>For high-volume transactions, importing from Excel is efficient.</p>
+          <div class="callout warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+              <strong>Critical Validation Rules:</strong>
+              <ul>
+                <li>
+                  Date format
+                  <em>must</em>
+                  be
+                  <code>DD/MM/YYYY</code>
+                </li>
+                <li>
+                  The value in
+                  <code>Deposit Amount</code>
+                  must match
+                  <code>Re-Enter Deposit Amount</code>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <h3 id="bank_statements_manual_anchor">1.3.3 Manual Capturing of a Bank Statement</h3>
+          <p>
+            Click
+            <code>+ Register New Deposit</code>
+            for single deposits.
+          </p>
+        </div>
+      </template>
+      <template id="content-quiz">
+        <div class="content-section">
+          <h2>Part 1 Quiz: Test Your Knowledge</h2>
+          <p>This quiz will test your understanding of Part 1. You must achieve 90% or higher to unlock Part 2.</p>
+          <div id="quizContainer" class="text-center mt-8">
+            <button id="startQuizBtn" class="btn btn-primary">Start Quiz</button>
+          </div>
+        </div>
+      </template>
+      <template id="content-medical_aid_payments_parent">
+        <div class="content-section">
+          <h2>2.1 Medical Aid Payments</h2>
+          <p>This is where medical aid payments deposited into the practice's bank account are captured.</p>
+          <h3 id="med_aid_manual_anchor">2.1.1 Manual Capturing</h3>
+          <p>Select "New Payment Advice".</p>
+          <h3 id="med_aid_era_anchor">2.1.2 Electronic Remittance</h3>
+          <p>Import an ERA file by selecting "Import Remittance".</p>
+          <h3 id="med_aid_excel_anchor">2.1.3 Excel Operations</h3>
+          <p>Download an Excel template, fill it in and upload.</p>
+        </div>
+      </template>
+      <template id="content-allocations">
+        <div class="content-section">
+          <h2>2.2 Allocations</h2>
+          <p>Match remittance lines against claimed scripts.</p>
+        </div>
+      </template>
+      <template id="content-adjustments">
+        <div class="content-section">
+          <h2>2.3 Adjustments</h2>
+          <p>The Adjustments application handles outstanding amounts.</p>
+        </div>
+      </template>
+      <template id="content-quiz_part2">
+        <div class="content-section">
+          <h2>Part 2 Quiz: Final Assessment</h2>
+          <p>Achieve 90% or higher to complete your certification.</p>
+          <div id="quizContainer" class="text-center mt-8">
+            <button id="startQuizBtnPart2" class="btn btn-primary">Start Final Quiz</button>
+          </div>
+        </div>
+      </template>
+      <template id="content-learner_analytics">
+        <div id="learner-analytics">
+          <h2 class="text-2xl font-bold mb-6">My Progress Dashboard</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div class="chart-container">
+              <h3 class="chart-title">Overall Completion</h3>
+              <canvas id="completionChart" height="250"></canvas>
+            </div>
+            <div class="chart-container">
+              <h3 class="chart-title">Knowledge Retention</h3>
+              <canvas id="retentionChart" height="250"></canvas>
+            </div>
+            <div class="chart-container md:col-span-2 lg:col-span-1">
+              <h3 class="chart-title">Recent Quiz Scores</h3>
+              <canvas id="scoresChart" height="250"></canvas>
+            </div>
+            <div class="chart-container col-span-1 md:col-span-2 lg:col-span-3">
+              <h3 class="chart-title">Skill Mastery</h3>
+              <canvas id="skillChart" height="300"></canvas>
+            </div>
+            <div class="chart-container col-span-1 md:col-span-2 lg:col-span-3">
+              <h3 class="chart-title">Training Activity</h3>
+              <div class="heatmap-placeholder p-4"></div>
+            </div>
+          </div>
+          <div class="chart-container">
+            <h3 class="chart-title">Learning Progress Timeline</h3>
+            <canvas id="timelineChart" height="150"></canvas>
+          </div>
+        </div>
+      </template>
+    </div>
+    <script type="module">
+      mermaid.initialize({ startOnLoad:false, theme:'base' });
+      const
+      
+state={currentSection:null,completedSections:JSON.parse(localStorage.getItem('completedSections'))||[],quizData:{part1:[
+      {id:1,question:"What is the primary purpose of the Bank Statement Register?",options:["Track employee 
+hours","Reconcile
+      payments before locking Medical Aid Payment Advice","Manage appointment schedules","Generate financial
+      reports"],answer:1,explanation:"It reconciles payments before locking the Medical Aid Payment
+      Advice."},{id:2,question:"Which validation rule is critical during Excel import for bank 
+statements?",options:["File
+      size under 5MB","Date format DD/MM/YYYY","Amounts must be in USD","Sheet names must follow a
+      pattern"],answer:1,explanation:"Date must be DD/MM/YYYY and deposit amount match."},{id:3,question:"What action 
+should
+      you take if you find an Unallocated Bank Deposit?",options:["Delete it","Link it to a Payment Advice","Report
+      it","Ignore it"],answer:1,explanation:"Link it to a Payment Advice."}],part2:[{id:1,question:"What is the correct
+      sequence for processing an ERA file?",options:["Import → Validate → Lock → Allocate","Lock → Import →
+      Allocate → Validate","Validate → Allocate → Lock → Import","Allocate → Lock → Import →
+      Validate"],answer:0,explanation:"Import, Validate, Lock, Allocate."},{id:2,question:"Which adjustment option 
+should be
+      used when the practice absorbs a small discrepancy?",options:["Transfer to Member","Write Off","Resubmit","Do 
+Nothing
+      Now"],answer:1,explanation:"Write Off."},{id:3,question:"What does 'Incomplete Allocation Documents'
+      indicate?",options:["Awaiting manager approval","Remittance documents with unallocated balances","Documents with 
+data
+      errors","Documents older than 30 days"],answer:1,explanation:"Documents with unallocated
+      
+balances."}]},userAnswers:{},quizScores:JSON.parse(localStorage.getItem('quizScores'))||{},part2Unlocked:localStorage.ge
+      tItem('part2Unlocked')==='true'||false};
+      const sections=[{id:'workflows',title:'System Workflows',sourceSectionId:'workflows',skills:['System
+      Architecture','Data Flow']},{id:'logging_in',title:'1.1 Logging In',sourceSectionId:'logging_in',skills:['System
+      Navigation','Access Control']},{id:'dashboard',title:'1.2 Dashboard',sourceSectionId:'dashboard',skills:['Data
+      Interpretation','KPI Monitoring']},{id:'bank_statements_parent',title:'1.3 Managing Bank
+      Statements',sourceSectionId:'bank_statements_parent',skills:['Financial Reconciliation','Data
+      Validation'],subSections:[{id:'bank_statements_overview',title:'1.3.1
+      Overview',anchor:'bank_statements_overview_anchor'},{id:'bank_statements_excel',title:'1.3.2 Excel
+      Operations',anchor:'bank_statements_excel_anchor'},{id:'bank_statements_manual',title:'1.3.3 Manual
+      Capture',anchor:'bank_statements_manual_anchor'}]},{id:'quiz',title:'Part 1
+      Quiz',sourceSectionId:'quiz',skills:['Knowledge Assessment','Critical
+      Thinking']},{id:'medical_aid_payments_parent',title:'2.1 Medical Aid
+      Payments',sourceSectionId:'medical_aid_payments_parent',skills:['Payment Processing','ERA
+      Management'],subSections:[{id:'med_aid_manual',title:'2.1.1 Manual
+      Capturing',anchor:'med_aid_manual_anchor'},{id:'med_aid_era',title:'2.1.2 Electronic
+      Remittance',anchor:'med_aid_era_anchor'},{id:'med_aid_excel',title:'2.1.3 Excel
+      Operations',anchor:'med_aid_excel_anchor'}]},{id:'allocations',title:'2.2
+      Allocations',sourceSectionId:'allocations',skills:['Payment 
+Allocation','Reconciliation']},{id:'adjustments',title:'2.3
+      Adjustments',sourceSectionId:'adjustments',skills:['Discrepancy Resolution','Accounting
+      Adjustments']},{id:'quiz_part2',title:'Part 2 Quiz',sourceSectionId:'quiz_part2',skills:['Advanced 
+Assessment','Problem
+      Solving']}];
+      const appContainer=document.getElementById('app-container');
+      const dynamicContentArea=document.getElementById('dynamicContentArea');
+      const mainContent=document.getElementById('mainContent');
+      const contentWrapper=document.getElementById('content-wrapper');
+      const sidebarNav=document.getElementById('context-bar');
+      const geminiModal=document.getElementById('geminiModal');
+      const themeSwitcher=document.getElementById('theme-switcher');
+      const beginTrainingBtn=document.getElementById('begin-training-btn');
+      const coverPage=document.getElementById('cover-page');
+      function init(){buildSidebar();setupEventListeners();loadTheme();}
+      function buildSidebar(){let html='';html+=`<div id="part1-header" class="part-header"><span>Part 1: The
+      Basics</span></div>`;sections.filter(s=>!s.title.startsWith('2.')).forEach(sec=>{const
+      completed=state.completedSections.includes(sec.id);const current=state.currentSection===sec.id;const
+      locked=sec.id==='quiz'?false:sec.id.startsWith('2.');html+=buildSidebarItem(sec,completed,current,locked);});const
+      part2Locked=!state.part2Unlocked;html+=`<div id="part2-header" class="part-header"><span>Part 2: Payments &
+      Reconciliation</span>${part2Locked?'<span class="part-locked"><i class="fas fa-lock mr-1"></i>
+      Locked</span>':''}</div>`;sections.filter(s=>s.title.startsWith('2.')).forEach(sec=>{const
+      completed=state.completedSections.includes(sec.id);const current=state.currentSection===sec.id;const
+      locked=!state.part2Unlocked;html+=buildSidebarItem(sec,completed,current,locked);});sidebarNav.innerHTML=html;}
+      function buildSidebarItem(section,completed,current,locked){let item='';const 
+disabledClass=locked?'disabled':'';const
+      completedClass=completed?'completed':'';const currentClass=current?'current':'';item+=`<div class="px-2 mb-1"
+      data-parent-id="${section.id}"><a href="#" class="sidebar-link ${disabledClass} ${completedClass} ${currentClass}"
+      data-id="${section.id}" ${locked?'tabindex="-1"':''}>${section.title}<span 
+class="progress-indicator">${completed?'<i
+      class="fas
+      fa-check-circle"></i>':''}${current?'<span>•</span>':''}</span></a>`;if(section.subSections&&!locked){item+='<ul
+      class="sidebar-submenu '+(current?'expanded':'')+'">';section.subSections.forEach(sub=>{const
+      subCompleted=state.completedSections.includes(sub.id);const 
+subCurrent=state.currentSection===sub.anchor;item+=`<li><a
+      href="#" class="sidebar-link ${subCompleted?'completed':''} ${subCurrent?'current':''}"
+      data-id="${sub.anchor}">${sub.title}${subCompleted?'<span class="progress-indicator"><i class="fas
+      fa-check-circle"></i></span>':''}</a></li>`;});item+='</ul>';}item+='</div>';return item;}
+      function
+      
+setupEventListeners(){beginTrainingBtn.addEventListener('click',beginTraining);document.getElementById('analytics-link')
+      
+.addEventListener('click',showAnalytics);document.getElementById('dashboard-link').addEventListener('click',()=>displayS
+      
+ection('workflows'));document.getElementById('help-link').addEventListener('click',showHelp);themeSwitcher.addEventListe
+      ner('click',toggleTheme);sidebarNav.addEventListener('click',handleSidebarClick);}
+      function loadTheme(){const saved=localStorage.getItem('theme');const
+      prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;const
+      isDark=saved?saved==='dark':prefersDark;setTheme(isDark);}
+      function setTheme(isDark){if(isDark){document.documentElement.classList.add('dark');themeSwitcher.innerHTML='<i
+      class="fas fa-sun"></i>'; } else {document.documentElement.classList.remove('dark');themeSwitcher.innerHTML='<i
+      class="fas fa-moon"></i>'; } localStorage.setItem('theme',isDark?'dark':'light');const
+      theme=isDark?'dark':'default';mermaid.initialize({startOnLoad:false,theme});if(document.querySelector('.mermaid'))
+      mermaid.run();}
+      function toggleTheme(){setTheme(!document.documentElement.classList.contains('dark'));}
+      function trapFocus(el){const
+      
+focusable=el.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])');if(!focusable.lengt
+      h)return;const first=focusable[0];const
+      
+last=focusable[focusable.length-1];el.addEventListener('keydown',e=>{if(e.key==='Tab'){if(e.shiftKey){if(document.active
+      
+Element===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus
+      ();}}}});first.focus();}
+      function
+      
+beginTraining(){appContainer.classList.add('training-active');setTimeout(()=>{contentWrapper.style.opacity='1';coverPage
+      .style.display='none';displaySection('workflows');},100);}
+      function
+      
+displaySection(id){appContainer.classList.remove('zen-mode-active');state.currentSection=id;if(id==='analytics'){const
+      t=document.getElementById('content-learner_analytics');dynamicContentArea.innerHTML=t?t.innerHTML:'<div
+      class="p-8"><p>Analytics not
+      available.</p></div>';mainContent.scrollTo(0,0);if(t)renderAnalyticsCharts();updateActiveLink(id);return;}const
+      
+section=sections.find(s=>s.id===id||(s.subSections&&s.subSections.some(sub=>sub.anchor===id)));if(!section)return;const
+      
+template=document.getElementById(`content-${section.sourceSectionId}`);if(!template)return;dynamicContentArea.innerHTML=
+      
+template.innerHTML;dynamicContentArea.firstElementChild.dataset.sectionId=section.id;if(section.subSections&&section.sub
+      
+Sections.some(sub=>sub.anchor===id)){setTimeout(()=>{document.getElementById(id)?.scrollIntoView({behavior:'smooth',bloc
+      k:'start'});},100);}else{mainContent.scrollTo(0,0);}if(section.id==='workflows') 
+mermaid.run();if(section.id==='quiz')
+      setupQuiz('part1');else if(section.id==='quiz_part2')
+      
+setupQuiz('part2');updateActiveLink(id);if(!state.completedSections.includes(id)){state.completedSections.push(id);local
+      Storage.setItem('completedSections',JSON.stringify(state.completedSections));buildSidebar();}}
+      function
+      
+updateActiveLink(id){document.querySelectorAll('.sidebar-link.active').forEach(el=>el.classList.remove('active'));const
+      link=document.querySelector(`.sidebar-link[data-id="${id}"]`);if(link){link.classList.add('active');const
+      parent=link.closest('[data-parent-id]');if(parent){const
+      subMenu=parent.querySelector('.sidebar-submenu');if(subMenu){subMenu.classList.add('expanded');const
+      parentLink=parent.querySelector('.sidebar-link');if(parentLink){parentLink.classList.add('active');}}}}}
+      function handleSidebarClick(e){e.preventDefault();const
+      link=e.target.closest('.sidebar-link');if(!link||link.classList.contains('disabled'))return;const
+      id=link.dataset.id;const parentDiv=link.closest('[data-parent-id]');if(parentDiv){const
+      subMenu=parentDiv.querySelector('.sidebar-submenu');if(subMenu){const
+      
+isExpanded=subMenu.classList.contains('expanded');subMenu.classList.toggle('expanded',!isExpanded);}}displaySection(id);
+      }
+      function showAnalytics(e){e.preventDefault();displaySection('analytics');}
+      function showHelp(e){e.preventDefault();callGemini("Provide a comprehensive guide on using the Unisolv 2.0 
+training
+      portal, including navigation, quizzes, and progress tracking.","Training Portal Help");}
+      function setupQuiz(type){const
+      container=document.getElementById('quizContainer');if(!container)return;container.innerHTML=`<div
+      class="quiz-instructions mb-6"><p>This quiz tests your understanding. Score 90% or higher to 
+${type==='part1'?'unlock
+      Part 2':'complete certification'}.</p><div class="callout info mt-4"><i class="fas
+      fa-info-circle"></i><div><strong>Confidence Rating:</strong> Indicate how confident you are in your
+      answer.</div></div></div><button id="startQuizBtn" class="btn btn-primary">Start
+      Quiz</button>`;document.getElementById('startQuizBtn').addEventListener('click',()=>{renderQuiz(type);});}
+      function renderQuiz(type){const questions=state.quizData[type];let html=`<div class="quiz-header mb-6"><h3
+      class="text-xl font-bold">${type==='part1'?'Part 1':'Final'} Assessment</h3><p>Complete all
+      questions.</p></div>`;questions.forEach((q,idx)=>{html+=renderQuestion(q,idx);});html+='<div
+      class="quiz-controls"><button id="submitQuiz" class="btn btn-primary">Submit Answers</button></div>';const
+      
+container=document.getElementById('quizContainer');container.innerHTML=html;appContainer.classList.add('zen-mode-active'
+      );attachQuizListeners(type);}function renderQuestion(q,index){let 
+options='';q.options.forEach((opt,i)=>{options+=`<div
+      class="option-item"><input type="radio" id="q${q.id}_opt${i}" name="q${q.id}" value="${i}" class="sr-only"><label
+      for="q${q.id}_opt${i}">${opt}</label></div>`;});return`<div class="question-box" data-question-id="${q.id}"><div
+      class="question-header"><div class="question-number">${index+1}</div><div
+      class="question-text">${q.question}</div></div><div class="options-container">${options}</div><div
+      class="confidence-container mt-4"><p class="text-sm font-medium mb-2">How confident are you?</p><div
+      class="confidence-selector"><button class="confidence-btn" data-confidence="low">Low</button><button
+      class="confidence-btn" data-confidence="medium">Medium</button><button class="confidence-btn"
+      data-confidence="high">High</button></div></div></div>`;}
+      function
+      
+attachQuizListeners(type){document.querySelectorAll('.confidence-btn').forEach(btn=>{btn.addEventListener('click',functi
+      on(){const qid=this.closest('.question-box').dataset.questionId;const
+      
+c=this.dataset.confidence;this.parentElement.querySelectorAll('.confidence-btn').forEach(b=>b.classList.remove('selected
+      
+'));this.classList.add('selected');if(!state.userAnswers[type])state.userAnswers[type]={};if(!state.userAnswers[type][qi
+      
+d])state.userAnswers[type][qid]={};state.userAnswers[type][qid].confidence=c;});});document.getElementById('submitQuiz')
+      .addEventListener('click',()=>{if(validateQuiz(type)){calculateScore(type);}});}function validateQuiz(type){const
+      questions=state.quizData[type];for(const q of questions){const
+      selected=document.querySelector(`input[name="q${q.id}"]:checked`);const
+      conf=state.userAnswers[type]?.[q.id]?.confidence;if(!selected||!conf){alert('Please answer all questions and 
+select
+      confidence levels.');return false;}}return true;}
+      function calculateScore(type){const questions=state.quizData[type];let correct=0;questions.forEach(q=>{const
+      
+selected=document.querySelector(`input[name="q${q.id}"]:checked`);if(selected&&parseInt(selected.value)===q.answer)corre
+      ct++;});const
+      
+score=Math.round((correct/questions.length)*100);state.quizScores[type]=score;localStorage.setItem('quizScores',JSON.str
+      
+ingify(state.quizScores));if(type==='part1'&&score>=90){state.part2Unlocked=true;localStorage.setItem('part2Unlocked','t
+      rue');const header=document.getElementById('part2-header');if(header)header.classList.add('pulse-animation');}
+      showQuizResults(type,score,correct,questions.length);}function showQuizResults(type,score,correct,total){const
+      passed=score>=90;const container=document.getElementById('quizContainer');let html=`<div class="quiz-results"><h3
+      class="text-2xl font-bold mb-4">Quiz Results</h3><div class="quiz-result-card ${passed?'pass':'fail'}"><div
+      class="text-4xl font-bold mb-2">${score}%</div><div class="text-xl font-semibold mb-4">${passed?'Passed':'Not
+      Passed'}</div><p>You answered ${correct} out of ${total} questions
+      correctly.</p>`;if(passed&&type==='part1'){html+=`<div class="skill-confirmation mt-6"><i class="fas
+      fa-check-circle"></i><div><strong>Skills Confirmed:</strong> System Fundamentals, Financial
+      Reconciliation</div></div>`;}if(passed&&type==='part2'){html+=`<div class="skill-confirmation mt-6"><i class="fas
+      fa-check-circle"></i><div><strong>Certification Achieved:</strong> Unisolv 2.0 Claims Settlement
+      Operator</div></div>`;}html+='</div><div class="mt-6">';if(!passed){html+='<button id="retryQuiz" class="btn
+      btn-primary mr-3">Retry Quiz</button>';}html+='<button id="quizReview" class="btn btn-secondary">Review
+      
+Answers</button></div></div>';container.innerHTML=html;if(document.getElementById('retryQuiz'))document.getElementById('
+      
+retryQuiz').addEventListener('click',()=>{renderQuiz(type);});document.getElementById('quizReview').addEventListener('cl
+      ick',()=>{alert('Review functionality would show detailed answers with explanations');});}
+      function
+      
+renderAnalyticsCharts(){Chart.defaults.color=document.documentElement.classList.contains('dark')?'#94A3B8':'#4B5563';Cha
+      rt.defaults.borderColor=document.documentElement.classList.contains('dark')?'#334155':'#E5E7EB';const
+      completionCtx=document.getElementById('completionChart');if(completionCtx){new
+      
+Chart(completionCtx,{type:'doughnut',data:{labels:['Completed','Remaining'],datasets:[{data:[65,35],backgroundColor:['va
+      
+r(--theme-success)','var(--border-color)'],borderWidth:0}]},options:{responsive:true,cutout:'70%',plugins:{legend:{posit
+      ion:'bottom',labels:{padding:20,usePointStyle:true,pointStyle:'circle'}}}}});}const
+      skillCtx=document.getElementById('skillChart');if(skillCtx){new Chart(skillCtx,{type:'radar',data:{labels:['System
+      Navigation','Financial Reconciliation','ERA Management','Payment Allocation','Excel
+      Operations','Adjustments'],datasets:[{label:'Competence
+      
+Score',data:[92,85,75,88,95,80],fill:true,backgroundColor:'rgba(52,144,255,0.1)',borderColor:'var(--theme-accent)',point
+      
+BackgroundColor:'var(--theme-accent)',pointBorderColor:'#fff',pointHoverBackgroundColor:'#fff',pointHoverBorderColor:'va
+      
+r(--theme-accent)'}]},options:{responsive:true,scales:{r:{beginAtZero:true,max:100,grid:{color:'var(--border-color)'},an
+      gleLines:{color:'var(--border-color)'},pointLabels:{font:{size:11}}}},plugins:{legend:{display:false}}});}const
+      heatmapContainer=document.querySelector('.heatmap-placeholder');if(heatmapContainer){let h='<div
+      class="heatmap-container">';for(let i=0;i<7;i++){h+='<div class="heatmap-row">';for(let j=0;j<20;j++){const
+      levels=['low','medium','high','very-high','extreme'];const
+      level=levels[Math.floor(Math.random()*levels.length)];h+=`<div class="heatmap-cell
+      ${level}"></div>`;}h+='</div>';}h+='</div>';heatmapContainer.innerHTML=h;}}
+;
+      async function callGemini(prompt,title){geminiModal.innerHTML=`<div class="modal-content"><div 
+class="modal-header"><h3
+      class="modal-title">${title}</h3><button class="modal-close-btn" aria-label="Close">&times;</button></div><div
+      class="modal-body"><div class="loader"></div></div></div>`;geminiModal.classList.add('visible');const
+      modalBody=geminiModal.querySelector('.modal-body');const
+      
+closeBtn=geminiModal.querySelector('.modal-close-btn');closeBtn.onclick=()=>{geminiModal.classList.remove('visible');};t
+      
+rapFocus(geminiModal);geminiModal.onclick=e=>{if(e.target===geminiModal)geminiModal.classList.remove('visible');};setTim
+      eout(()=>{const response=`# Unisolv 2.0 Training Portal Guide\n## Navigation\n- Use the sidebar to navigate\n-
+      Completed sections show a checkmark\n- Locked sections require previous content\n## Quizzes\n- Answer all 
+questions\n-
+      Passing unlocks new content\n## Progress Tracking\n- View progress in
+      Analytics`;modalBody.innerHTML=DOMPurify.sanitize(marked.parse(response));},1500);}init();
+    </script>
+  </body>
+</html>
